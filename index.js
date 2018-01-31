@@ -1,3 +1,4 @@
+const R = require('ramda')
 const Rx = require('rxjs/Rx')
 const axios = require('axios')
 const express = require('express')
@@ -6,6 +7,7 @@ const compression = require('compression')
 let markets = null
 let marketsKey = null
 let exchangeRates = null
+let supportTokens = []
 
 async function exchange(base, symbols) {
     return axios.get(`https://api.fixer.io/latest?base=${base}&symbols=${symbols.join(',')}`)
@@ -31,6 +33,9 @@ async function marketsFromBigOne() {
         .then(val => {
             markets = val
             marketsKey = Object.keys(val)
+            supportTokens = marketsKey.reduce((acc, value, index) => {
+                return R.union(acc, value.split('-'))
+            }, [])
             return val
         })
         .catch(err => console.log(err))
@@ -41,6 +46,7 @@ async function api(tokens) {
         return null
     }
 
+    tokens = tokens.filter(token => supportTokens.indexOf(token) > -1)
     const wrapTokens = tokens.map(ele => wrapToken(ele, marketsKey))
     const usd2cny = exchangeRates.rates['CNY']
 
@@ -87,11 +93,13 @@ function wrapToken(token, markets) {
 function main() {
     Rx.Observable
         .interval(10 * 1000 /* ms */)
+        .startWith(0)
         .timeInterval()
         .subscribe(async (next) => {
+            console.log('data update start')
             await exchange('USD', ['CNY'])
             await marketsFromBigOne()
-            console.log('data update')
+            console.log('data update end')
         },
         (err) => {
             console.log('Error: ' + err);
@@ -105,12 +113,30 @@ function main() {
 
 const app = express()
 app.use(compression());
+app.use((err, req, res, next) => {
+    logger.error({ err, reqNoBody: req }, `Uncatch: ${err.message}`);
+
+    if (req.xhr) {
+        let statusCode = res.statusCode || 500;
+        if (Number(statusCode) === 200) {
+            statusCode = 500;
+        }
+        return res.status(statusCode).json({ code: 0, err: { err_code: 0, message: err.message } });
+    }
+    return res.status(500).json({ code: 0, err: { err_code: 0, message: err.message } });
+})
 
 app.get('/latest', async function (req, res) {
-    let params = req.query['symbols'] || req.params['symbols']
-    const result = await api(params.split(','))
+    const params = req.query['symbols']
+
+    let result = { error: 'invalid request.' }
+    if (params) {
+        result = await api(params.split(',')).catch(err => console.log(err))
+    }
     return res.json(result)
 })
 
 main()
-app.listen(3000, () => console.log('Example app listening on port 3000!'))
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`))
