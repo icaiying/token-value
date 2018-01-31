@@ -1,0 +1,25 @@
+{
+  "name": "token-value",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/icaiying/token-value.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/icaiying/token-value/issues"
+  },
+  "homepage": "https://github.com/icaiying/token-value#readme",
+  "dependencies": {
+    "axios": "^0.17.1",
+    "compression": "^1.7.1",
+    "express": "^4.16.2",
+    "rxjs": "^5.5.6"
+  }
+}
