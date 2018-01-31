@@ -3,6 +3,7 @@ const Rx = require('rxjs/Rx')
 const axios = require('axios')
 const express = require('express')
 const compression = require('compression')
+const cors = require('cors')
 
 let markets = null
 let marketsKey = null
@@ -46,8 +47,8 @@ async function api(tokens) {
         return null
     }
 
-    tokens = tokens.filter(token => supportTokens.indexOf(token) > -1)
-    const wrapTokens = tokens.map(ele => wrapToken(ele, marketsKey))
+    tokens = tokens.filter(token => supportTokens.indexOf(token.toUpperCase()) > -1)
+    const wrapTokens = tokens.map(ele => wrapToken(ele.toUpperCase(), marketsKey))
     const usd2cny = exchangeRates.rates['CNY']
 
     const resultJson = {
@@ -96,10 +97,25 @@ function main() {
         .startWith(0)
         .timeInterval()
         .subscribe(async (next) => {
-            console.log('data update start')
+            console.log('exchange update start')
             await exchange('USD', ['CNY'])
+            console.log('exchange update end')
+        },
+        (err) => {
+            console.log('Error: ' + err);
+        },
+        () => {
+            console.log('Completed');
+        });
+
+    Rx.Observable
+        .interval(30 * 1000 /* ms */)
+        .startWith(0)
+        .timeInterval()
+        .subscribe(async (next) => {
+            console.log('big.one update start')
             await marketsFromBigOne()
-            console.log('data update end')
+            console.log('big.one update end')
         },
         (err) => {
             console.log('Error: ' + err);
@@ -112,7 +128,11 @@ function main() {
 
 
 const app = express()
-app.use(compression());
+app.use(compression())
+app.use(cors({
+    "methods": "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+    "allowedHeaders": "*"
+}))
 app.use((err, req, res, next) => {
     logger.error({ err, reqNoBody: req }, `Uncatch: ${err.message}`);
 
