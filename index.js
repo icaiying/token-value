@@ -131,7 +131,7 @@ const app = express()
 app.use(compression())
 app.use(cors({
     "methods": "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
-    "allowedHeaders": "*"
+    "allowedHeaders": ['Content-Type', 'Origin', 'X-Requested-With', 'Accept']
 }))
 app.use((err, req, res, next) => {
     logger.error({ err, reqNoBody: req }, `Uncatch: ${err.message}`);
