@@ -97,15 +97,15 @@ function main() {
         .startWith(0)
         .timeInterval()
         .subscribe(async (next) => {
-            console.log('exchange update start')
+            // console.log('exchange update start')
             await exchange('USD', ['CNY'])
-            console.log('exchange update end')
+            // console.log('exchange update end')
         },
         (err) => {
             console.log('Error: ' + err);
         },
         () => {
-            console.log('Completed');
+            // console.log('Completed');
         });
 
     Rx.Observable
@@ -113,15 +113,15 @@ function main() {
         .startWith(0)
         .timeInterval()
         .subscribe(async (next) => {
-            console.log('big.one update start')
+            // console.log('big.one update start')
             await marketsFromBigOne()
-            console.log('big.one update end')
+            // console.log('big.one update end')
         },
         (err) => {
             console.log('Error: ' + err);
         },
         () => {
-            console.log('Completed');
+            // console.log('Completed');
         });
 }
 
